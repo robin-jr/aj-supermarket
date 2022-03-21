@@ -6,6 +6,10 @@ To run this project,
 ```
 $ python3 ./aj_supermarket.py
 ```
+To run python unittests
+```
+$ python3 -m unittest
+```
 ### Sample output
 Here is a sample output of the program
 ```

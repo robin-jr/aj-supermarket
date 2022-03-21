@@ -51,6 +51,7 @@ class Store:
         else:
             print("{} - {}".format(requested_product.name,
                   requested_product.quantity))
+        return requested_product.quantity
 
     def make_sale(self, product_ids: List[int], quantity_purchased: List[int]):
         if not self.__check_availability(product_ids, quantity_purchased):
