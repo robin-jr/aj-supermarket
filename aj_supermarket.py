@@ -1,46 +1,50 @@
 from typing import Dict, List
 
 
+class Product:
+    def __init__(self, id, name, quantity, price):
+        self.id = id
+        self.name = name
+        self.quantity = quantity
+        self.price = price
+
+
+class Offer:
+    def __init__(self, id, name, product_id, min_quantity, discount_percent):
+        self.id = id
+        self.name = name
+        self.product_id = product_id
+        self.min_quantity = min_quantity
+        self.discount_percent = discount_percent
+
+
+class BillEntry:
+    def __init__(self, product_id, product_name, quantity_purchased, product_price, offer_id, net_price):
+        self.product_id = product_id
+        self.product_name = product_name
+        self.quantity_purchased = quantity_purchased
+        self.product_price = product_price
+        self.offer_id = offer_id
+        self.net_price = net_price
+
+
 class Store:
-    class Product:
-        def __init__(self, id, name, quantity, price):
-            self.id = id
-            self.name = name
-            self.quantity = quantity
-            self.price = price
-
-    class Offer:
-        def __init__(self, id, name, product_id, min_quantity, discount_percent):
-            self.id = id
-            self.name = name
-            self.product_id = product_id
-            self.min_quantity = min_quantity
-            self.discount_percent = discount_percent
-
-    class BillEntry:
-        def __init__(self, product_id, product_name, quantity_purchased, product_price, offer_id, net_price):
-            self.product_id = product_id
-            self.product_name = product_name
-            self.quantity_purchased = quantity_purchased
-            self.product_price = product_price
-            self.offer_id = offer_id
-            self.net_price = net_price
 
     def __init__(self, owner_name: str, shop_name: str):
         # A dictionay is used rather than a list to make lookups easier
         self.owner_name = owner_name
         self.shop_name = shop_name
-        self.inventory: Dict[int, Store.Product] = {}  # product_id -> product
-        self.offers: Dict[int, List[Store.Offer]] = {}  # product_id -> offer[]
+        self.inventory: Dict[int, Product] = {}  # product_id -> product
+        self.offers: Dict[int, List[Offer]] = {}  # product_id -> offer[]
 
     def add_or_update_product(self, product_id, product_name, quantity, price):
-        self.inventory[product_id] = self.Product(
+        self.inventory[product_id] = Product(
             product_id, product_name, quantity, price)
         print("Inventory updated")
 
     def add_offer(self, offer_id, offer_name, product_id, min_quantity, discount_percent):
         self.offers[product_id] = self.offers.get(offer_id, [])
-        self.offers[product_id].append(self.Offer(
+        self.offers[product_id].append(Offer(
             offer_id, offer_name, product_id, min_quantity, discount_percent))
         print("Offer Added")
 
@@ -62,7 +66,7 @@ class Store:
         for bill_entry in bill_entries:
             bill_entry = self.__apply_offer(bill_entry)
         self.__display_bill(bill_entries)
-        
+
     # Utility Methods start --------------------------------
     def __check_availability(self, product_ids: List[int], quantity_purchased: List[int]):
         for product_id, quantity in zip(product_ids, quantity_purchased):
@@ -79,7 +83,6 @@ class Store:
     def __reduce_stock(self, product_ids: List[int], quantity_purchased: List[int]):
         for product_id, quantity in zip(product_ids, quantity_purchased):
             self.inventory[product_id].quantity -= quantity
-
 
     def __calculate_price_with_discount(self, price, discount_percent):
         return round(price - (price * discount_percent / 100), 2)
@@ -110,9 +113,9 @@ class Store:
         return bill_entry
 
     def __generate_bill(self, product_ids: List[int], quantity_purchased: List[int]):
-        bill_entries: List[Store.BillEntry] = []
+        bill_entries: List[BillEntry] = []
         for product_id, quantity in zip(product_ids, quantity_purchased):
-            bill_entry = self.BillEntry(
+            bill_entry = BillEntry(
                 product_id, self.inventory[product_id].name, quantity, self.inventory[product_id].price, None, None)
             bill_entries.append(bill_entry)
         return bill_entries
@@ -127,7 +130,7 @@ class Store:
         print("== Total ==")
         print(total)
         print("============")
-    
+
     # Utility methods end ----------------------------------
 
     def start_the_day(self):
@@ -176,7 +179,7 @@ class Store:
                     print("Unknown command. Please try again.")
             except KeyboardInterrupt:
                 store_is_open = False
-            except:
+            except Exception as e:
                 print("Unknown command. Please try again.")
 
         print("\nGood bye! {}".format(self.owner_name))
