@@ -1,32 +1,10 @@
 from typing import Dict, List
 
-
-class Product:
-    def __init__(self, id, name, quantity, price):
-        self.id = id
-        self.name = name
-        self.quantity = quantity
-        self.price = price
-
-
-class Offer:
-    def __init__(self, id, name, product_id, min_quantity, discount_percent):
-        self.id = id
-        self.name = name
-        self.product_id = product_id
-        self.min_quantity = min_quantity
-        self.discount_percent = discount_percent
-
-
-class BillEntry:
-    def __init__(self, product_id, product_name, quantity_purchased, product_price, offer_id, net_price):
-        self.product_id = product_id
-        self.product_name = product_name
-        self.quantity_purchased = quantity_purchased
-        self.product_price = product_price
-        self.offer_id = offer_id
-        self.net_price = net_price
-
+from classes.product import Product
+from classes.bill_entry import BillEntry
+from classes.offer import Offer
+from classes.bill_total_offer import BillTotalOffer
+from classes.order import Order
 
 class Store:
 
@@ -36,6 +14,7 @@ class Store:
         self.shop_name = shop_name
         self.inventory: Dict[int, Product] = {}  # product_id -> product
         self.offers: Dict[int, List[Offer]] = {}  # product_id -> offer[]
+        self.special_offers: List[BillTotalOffer] = []
 
     def add_or_update_product(self, product_id, product_name, quantity, price):
         self.inventory[product_id] = Product(
@@ -47,6 +26,10 @@ class Store:
         self.offers[product_id].append(Offer(
             offer_id, offer_name, product_id, min_quantity, discount_percent))
         print("Offer Added")
+    
+    def add_special_offer(self,offer_id, offer_name,min_total,discount):
+        self.special_offers.append(BillTotalOffer(offer_id,offer_name,min_total,discount))
+        print("Special Offer Added")
 
     def get_stock(self, product_id):
         requested_product = self.inventory.get(product_id, None)
@@ -57,15 +40,24 @@ class Store:
                   requested_product.quantity))
         return requested_product.quantity
 
+    
+    def __generate_bill(self, product_ids: List[int], quantity_purchased: List[int]):
+        bill_entries: List[BillEntry] = []
+        for product_id, quantity in zip(product_ids, quantity_purchased):
+            bill_entry = BillEntry(
+                product_id, self.inventory[product_id].name, quantity, self.inventory[product_id].price, None, None)
+            bill_entries.append(bill_entry)
+        return bill_entries
+
     def make_sale(self, product_ids: List[int], quantity_purchased: List[int]):
         if not self.__check_availability(product_ids, quantity_purchased):
             return None
         self.__reduce_stock(product_ids, quantity_purchased)
+        
 
         bill_entries = self.__generate_bill(product_ids, quantity_purchased)
-        for bill_entry in bill_entries:
-            bill_entry = self.__apply_offer(bill_entry)
-        self.__display_bill(bill_entries)
+        new_order = Order(bill_entries,self.offers,self.special_offers)
+        new_order.execute()
 
     # Utility Methods start --------------------------------
     def __check_availability(self, product_ids: List[int], quantity_purchased: List[int]):
@@ -84,52 +76,8 @@ class Store:
         for product_id, quantity in zip(product_ids, quantity_purchased):
             self.inventory[product_id].quantity -= quantity
 
-    def __calculate_price_with_discount(self, price, discount_percent):
-        return round(price - (price * discount_percent / 100), 2)
 
-    def __get_best_offer(self, bill_entry: BillEntry):
-        offers = self.offers.get(bill_entry.product_id, [])
-        if not offers:
-            return None
-        best_offer = None
-        current_best_price = bill_entry.product_price * bill_entry.quantity_purchased
-        for offer in offers:
-            if offer.min_quantity <= bill_entry.quantity_purchased and self.__calculate_price_with_discount(bill_entry.product_price*bill_entry.quantity_purchased, offer.discount_percent) < current_best_price:
-                current_best_price = offer.discount_percent
-                best_offer = offer
-        return best_offer
-
-    def __apply_offer(self, bill_entry: BillEntry):
-        offer = self.__get_best_offer(bill_entry)
-
-        if not offer:
-            bill_entry.net_price = bill_entry.quantity_purchased * bill_entry.product_price
-            bill_entry.offer_id = "N/A"
-        else:
-            bill_entry.net_price = self.__calculate_price_with_discount(
-                bill_entry.product_price*bill_entry.quantity_purchased, offer.discount_percent)
-            bill_entry.offer_id = offer.id
-
-        return bill_entry
-
-    def __generate_bill(self, product_ids: List[int], quantity_purchased: List[int]):
-        bill_entries: List[BillEntry] = []
-        for product_id, quantity in zip(product_ids, quantity_purchased):
-            bill_entry = BillEntry(
-                product_id, self.inventory[product_id].name, quantity, self.inventory[product_id].price, None, None)
-            bill_entries.append(bill_entry)
-        return bill_entries
-
-    def __display_bill(self, bill_entries: List[BillEntry]):
-        print("== Bill ==")
-        total = 0
-        for bill_entry in bill_entries:
-            total += bill_entry.net_price
-            print("{} - {} - {} - {} - {} - {}".format(bill_entry.product_id, bill_entry.product_name,
-                  bill_entry.quantity_purchased, bill_entry.product_price, bill_entry.offer_id, bill_entry.net_price))
-        print("== Total ==")
-        print(total)
-        print("============")
+    
 
     # Utility methods end ----------------------------------
 
@@ -175,12 +123,15 @@ class Store:
                     discount_percent = int(discount_percent)
                     self.add_offer(
                         offer_id, offer_name, product_id, min_quantity, discount_percent)
+                elif command_name=="SPECIAL-OFFER":
+                    offer_id,offer_name,min_total,discount=query.split("|")
+                    self.add_special_offer(int(offer_id),offer_name,int(min_total),int(discount))
                 else:
                     print("Unknown command. Please try again.")
             except KeyboardInterrupt:
                 store_is_open = False
             except Exception as e:
-                print("Unknown command. Please try again.")
+                print("Unknown command. Please try again.",e)
 
         print("\nGood bye! {}".format(self.owner_name))
 
