@@ -1,5 +1,6 @@
 from typing import Dict, List
 from classes.bill_entry import BillEntry
+from classes.bill_total_offer_dispatcher import BillTotalOfferDispatcher
 from classes.order import Order
 from classes.product import Product
 from classes.product_offer import ProductOffer
@@ -14,10 +15,9 @@ class Store:
 
         # A dictionay is used rather than a list to make lookups easier
         self.inventory: Dict[int, Product] = {}  # product_id -> product
-        # self.offers: Dict[int, List[Offer]] = {}  # product_id -> offer[]
+        
         self.product_offer_dispatcher:ProductOfferDispatcher=ProductOfferDispatcher()
-
-        self.special_offers: List[BillTotalOffer] = []
+        self.bill_total_offer_dispatcher:BillTotalOfferDispatcher=BillTotalOfferDispatcher()
 
     def add_or_update_product(self, query):
         product_id, product_name, quantity, price = query.split("|")
@@ -35,8 +35,8 @@ class Store:
 
     def add_special_offer(self, query):
         offer_id, offer_name, min_total, discount = query.split("|")
-        self.special_offers.append(BillTotalOffer(
-            int(offer_id), offer_name, int(min_total), int(discount)))
+        new_offer=BillTotalOffer(int(offer_id), offer_name, int(min_total), int(discount))
+        self.bill_total_offer_dispatcher.add_offer(new_offer)
         print("Special Offer Added")
 
     def get_stock(self, query):
@@ -50,7 +50,7 @@ class Store:
     def make_sale(self, query):
         bill_entries = self.__get_bill_entries(query)
         self.__reduce_stock(bill_entries)
-        new_order = Order(bill_entries, self.product_offer_dispatcher,self.special_offers)
+        new_order = Order(bill_entries, self.product_offer_dispatcher,self.bill_total_offer_dispatcher)
         new_order.execute()
 
     def __reduce_stock(self, bill_entries: List[BillEntry]):
