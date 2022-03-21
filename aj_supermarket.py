@@ -1,11 +1,10 @@
 from typing import Dict, List
-
-from classes.product import Product
 from classes.bill_entry import BillEntry
-from classes.offer import Offer
-from classes.bill_total_offer import BillTotalOffer
 from classes.order import Order
-
+from classes.product import Product
+from classes.product_offer import ProductOffer
+from classes.product_offer_dispatcher import ProductOfferDispatcher
+from classes.bill_total_offer import BillTotalOffer
 
 class Store:
 
@@ -15,7 +14,8 @@ class Store:
 
         # A dictionay is used rather than a list to make lookups easier
         self.inventory: Dict[int, Product] = {}  # product_id -> product
-        self.offers: Dict[int, List[Offer]] = {}  # product_id -> offer[]
+        # self.offers: Dict[int, List[Offer]] = {}  # product_id -> offer[]
+        self.product_offer_dispatcher:ProductOfferDispatcher=ProductOfferDispatcher()
 
         self.special_offers: List[BillTotalOffer] = []
 
@@ -26,12 +26,11 @@ class Store:
         print("Inventory updated")
 
     def add_offer(self, query):
-        offer_name=query.split("|")[0]
-        offer_id, product_id, min_quantity, discount_percent = map(int,query.split("|")[1:])
-        
-        self.offers[product_id] = self.offers.get(offer_id, [])
-        self.offers[product_id].append(
-            Offer(offer_id, offer_name, product_id, min_quantity, discount_percent))
+        offer_name = query.split("|")[0]
+        offer_id, product_id, min_quantity, discount_percent = map(
+            int, query.split("|")[1:])
+        new_offer=ProductOffer(offer_id,offer_name,product_id,min_quantity,discount_percent)
+        self.product_offer_dispatcher.add_offer(new_offer)
         print("Offer Added")
 
     def add_special_offer(self, query):
@@ -41,16 +40,17 @@ class Store:
         print("Special Offer Added")
 
     def get_stock(self, query):
-        product_id=int(query)
+        product_id = int(query)
         requested_product = self.inventory.get(product_id, None)
         if not requested_product:
             raise Exception("The requested product is not found.")
         print("{} - {}".format(requested_product.name, requested_product.quantity))
         return requested_product.quantity
 
-    def make_sale(self, bill_entries: List[BillEntry]):
+    def make_sale(self, query):
+        bill_entries = self.__get_bill_entries(query)
         self.__reduce_stock(bill_entries)
-        new_order = Order(bill_entries, self.offers, self.special_offers)
+        new_order = Order(bill_entries, self.product_offer_dispatcher,self.special_offers)
         new_order.execute()
 
     def __reduce_stock(self, bill_entries: List[BillEntry]):
@@ -71,9 +71,9 @@ class Store:
             product = self.inventory.get(product_id, None)
             if not product:
                 raise Exception("Product not found in inventory")
-            gross_price = product.price*quantity
+            price = product.price*quantity
             bill_entries.append(BillEntry(
-                product_id, product.name, quantity, product.price, "N/A", gross_price))
+                product_id, product.name, quantity, product.price, "N/A", price))
         return bill_entries
 
     def start_the_day(self):
@@ -83,26 +83,20 @@ class Store:
             try:
                 command = input("Enter your command here: \n")
                 command_name, query = command.split("=>")
+
                 match command_name:
-                    case "EXIT":
-                        store_is_open = False
+                    case "EXIT": store_is_open = False
 
-                    case "INVENTORY":
-                        self.add_or_update_product(query)
+                    case "INVENTORY": self.add_or_update_product(query)
 
-                    case "SALE":
-                        bill_entries = self.__get_bill_entries(query)
-                        self.make_sale(bill_entries)
+                    case "SALE": self.make_sale(query)
 
-                    case "STOCK":
-                        self.get_stock(query)
+                    case "STOCK": self.get_stock(query)
 
-                    case "NEW-OFFER":
-                        self.add_offer(query)
+                    case "NEW-OFFER": self.add_offer(query)
 
-                    case "SPECIAL-OFFER":
-                        self.add_special_offer(query)
-                        
+                    case "SPECIAL-OFFER": self.add_special_offer(query)
+
             except KeyboardInterrupt:
                 store_is_open = False
             except Exception as e:

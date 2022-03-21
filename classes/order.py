@@ -1,35 +1,15 @@
 from typing import List
 from classes.bill_entry import BillEntry
-from classes.bill_total_offer import BillTotalOffer
-from classes.offer import Offer
-
 
 class Order:
-    def __init__(self, bill_entries: List[BillEntry],offers: List[Offer],special_offers: List[BillTotalOffer]):
+    def __init__(self, bill_entries: List[BillEntry],product_offer_dispatcher,special_offers):
         self.bill_entries= bill_entries
-        self.offers= offers
+        self.product_offer_dispatcher= product_offer_dispatcher
         self.special_offers= special_offers
     
     def execute(self):
-        for bill_entry in self.bill_entries:
-            bill_entry = self.__apply_offer(bill_entry)
+        self.product_offer_dispatcher.applyOffers(self)
         self.__display_bill(self.bill_entries)
-
-    def __calculate_price_with_discount(self, price, discount_percent):
-        return round(price - (price * discount_percent / 100), 2)
-
-    def __get_best_offer(self, bill_entry: BillEntry):
-        offers = self.offers.get(bill_entry.product_id, [])
-        if not offers:
-            return None
-        best_offer = None
-        current_best_price = bill_entry.product_price * bill_entry.quantity
-        for offer in offers:
-            if offer.min_quantity <= bill_entry.quantity and self.__calculate_price_with_discount(bill_entry.product_price*bill_entry.quantity, offer.discount_percent) < current_best_price:
-                current_best_price = offer.discount_percent
-                best_offer = offer
-        return best_offer
-    
 
     def __get_special_discount(self,total: int):
         special_discount=0
@@ -53,16 +33,3 @@ class Order:
         print(total)
         print("============")
         return total
-
-    def __apply_offer(self, bill_entry: BillEntry):
-        offer = self.__get_best_offer(bill_entry)
-
-        if not offer:
-            bill_entry.net_price = bill_entry.quantity * bill_entry.product_price
-            bill_entry.offer_id = "N/A"
-        else:
-            bill_entry.net_price = self.__calculate_price_with_discount(
-                bill_entry.product_price*bill_entry.quantity, offer.discount_percent)
-            bill_entry.offer_id = offer.id
-
-        return bill_entry
