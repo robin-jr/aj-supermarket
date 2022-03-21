@@ -23,9 +23,9 @@ class Order:
         if not offers:
             return None
         best_offer = None
-        current_best_price = bill_entry.product_price * bill_entry.quantity_purchased
+        current_best_price = bill_entry.product_price * bill_entry.quantity
         for offer in offers:
-            if offer.min_quantity <= bill_entry.quantity_purchased and self.__calculate_price_with_discount(bill_entry.product_price*bill_entry.quantity_purchased, offer.discount_percent) < current_best_price:
+            if offer.min_quantity <= bill_entry.quantity and self.__calculate_price_with_discount(bill_entry.product_price*bill_entry.quantity, offer.discount_percent) < current_best_price:
                 current_best_price = offer.discount_percent
                 best_offer = offer
         return best_offer
@@ -44,7 +44,7 @@ class Order:
         for bill_entry in bill_entries:
             total += bill_entry.net_price
             print("{} - {} - {} - {} - {} - {}".format(bill_entry.product_id, bill_entry.product_name,
-                  bill_entry.quantity_purchased, bill_entry.product_price, bill_entry.offer_id, bill_entry.net_price))
+                  bill_entry.quantity, bill_entry.product_price, bill_entry.offer_id, bill_entry.net_price))
             
         special_discount=self.__get_special_discount(total)
         total-=special_discount
@@ -58,11 +58,11 @@ class Order:
         offer = self.__get_best_offer(bill_entry)
 
         if not offer:
-            bill_entry.net_price = bill_entry.quantity_purchased * bill_entry.product_price
+            bill_entry.net_price = bill_entry.quantity * bill_entry.product_price
             bill_entry.offer_id = "N/A"
         else:
             bill_entry.net_price = self.__calculate_price_with_discount(
-                bill_entry.product_price*bill_entry.quantity_purchased, offer.discount_percent)
+                bill_entry.product_price*bill_entry.quantity, offer.discount_percent)
             bill_entry.offer_id = offer.id
 
         return bill_entry
