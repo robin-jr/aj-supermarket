@@ -10,38 +10,43 @@ from classes.order import Order
 class Store:
 
     def __init__(self, owner_name: str, shop_name: str):
-        # A dictionay is used rather than a list to make lookups easier
         self.owner_name = owner_name
         self.shop_name = shop_name
+
+        # A dictionay is used rather than a list to make lookups easier
         self.inventory: Dict[int, Product] = {}  # product_id -> product
         self.offers: Dict[int, List[Offer]] = {}  # product_id -> offer[]
+
         self.special_offers: List[BillTotalOffer] = []
 
-    def add_or_update_product(self, product_id, product_name, quantity, price):
-        self.inventory[product_id] = Product(
-            product_id, product_name, quantity, price)
+    def add_or_update_product(self, query):
+        product_id, product_name, quantity, price = query.split("|")
+        self.inventory[int(product_id)] = Product(
+            int(product_id), product_name, int(quantity), int(price))
         print("Inventory updated")
 
-    def add_offer(self, offer_id, offer_name, product_id, min_quantity, discount_percent):
+    def add_offer(self, query):
+        offer_name=query.split("|")[0]
+        offer_id, product_id, min_quantity, discount_percent = map(int,query.split("|")[1:])
+        
         self.offers[product_id] = self.offers.get(offer_id, [])
-        self.offers[product_id].append(Offer(
-            offer_id, offer_name, product_id, min_quantity, discount_percent))
+        self.offers[product_id].append(
+            Offer(offer_id, offer_name, product_id, min_quantity, discount_percent))
         print("Offer Added")
 
-    def add_special_offer(self, offer_id, offer_name, min_total, discount):
+    def add_special_offer(self, query):
+        offer_id, offer_name, min_total, discount = query.split("|")
         self.special_offers.append(BillTotalOffer(
-            offer_id, offer_name, min_total, discount))
+            int(offer_id), offer_name, int(min_total), int(discount)))
         print("Special Offer Added")
 
-    def get_stock(self, product_id):
+    def get_stock(self, query):
+        product_id=int(query)
         requested_product = self.inventory.get(product_id, None)
         if not requested_product:
-            print("The requested product is not found.")
-        else:
-            print("{} - {}".format(requested_product.name,
-                  requested_product.quantity))
+            raise Exception("The requested product is not found.")
+        print("{} - {}".format(requested_product.name, requested_product.quantity))
         return requested_product.quantity
-
 
     def make_sale(self, bill_entries: List[BillEntry]):
         self.__reduce_stock(bill_entries)
@@ -52,55 +57,56 @@ class Store:
         for e in bill_entries:
             self.inventory[e.product_id].quantity -= e.quantity
 
-    def start_the_day(self):
+    def __display_greetings(self):
         print("\nGood morning, {}".format(self.owner_name))
         print("--- {} is going to sky rocket its sales today! ---".format(self.shop_name))
         print("\n")
         print("Waiting for your commands...")
 
+    def __get_bill_entries(self, query):
+        product_ids_and_quantities = query.split(";")
+        bill_entries = []
+        for e in product_ids_and_quantities:
+            product_id, quantity = map(int, e.split("|"))
+            product = self.inventory.get(product_id, None)
+            if not product:
+                raise Exception("Product not found in inventory")
+            gross_price = product.price*quantity
+            bill_entries.append(BillEntry(
+                product_id, product.name, quantity, product.price, "N/A", gross_price))
+        return bill_entries
+
+    def start_the_day(self):
+        self.__display_greetings()
         store_is_open = True
         while store_is_open:
             try:
                 command = input("Enter your command here: \n")
                 command_name, query = command.split("=>")
-                if command_name == "EXIT":
-                    store_is_open = False
-                    break
-                elif command_name == "INVENTORY":
-                    product_id, product_name, quantity, price_per_quantity = query.split(
-                        "|")
-                    self.add_or_update_product(
-                        int(product_id), product_name, int(quantity), int(price_per_quantity))
-                elif command_name == "SALE":
-                    product_ids_and_quantities = query.split(";")
-                    bill_entries=[]
-                    for e in product_ids_and_quantities:
-                        product_id, quantity = map(int,e.split("|"))
-                        product = self.inventory.get(product_id,None)
-                        if not product:
-                            print("product not found")
-                            return
-                        gross_price = product.price*quantity
-                        bill_entries.append(BillEntry(product_id, product.name,quantity,product.price,"N/A",gross_price))
-                    self.make_sale(bill_entries)
-                elif command_name == "STOCK":
-                    self.get_stock(int(product_id))
-                elif command_name == "NEW-OFFER":
-                    offer_name, offer_id, product_id, min_quantity, discount_percent = query.split(
-                        "|")
-                    self.add_offer(
-                        int(offer_id), offer_name, int(product_id), int(min_quantity), int(discount_percent))
-                elif command_name == "SPECIAL-OFFER":
-                    offer_id, offer_name, min_total, discount = query.split(
-                        "|")
-                    self.add_special_offer(
-                        int(offer_id), offer_name, int(min_total), int(discount))
-                else:
-                    print("Unknown command. Please try again.")
+                match command_name:
+                    case "EXIT":
+                        store_is_open = False
+
+                    case "INVENTORY":
+                        self.add_or_update_product(query)
+
+                    case "SALE":
+                        bill_entries = self.__get_bill_entries(query)
+                        self.make_sale(bill_entries)
+
+                    case "STOCK":
+                        self.get_stock(query)
+
+                    case "NEW-OFFER":
+                        self.add_offer(query)
+
+                    case "SPECIAL-OFFER":
+                        self.add_special_offer(query)
+                        
             except KeyboardInterrupt:
                 store_is_open = False
             except Exception as e:
-                print("Unknown command. Please try again.", e)
+                print(e)
 
         print("\nGood bye! {}".format(self.owner_name))
 
