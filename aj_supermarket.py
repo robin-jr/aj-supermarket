@@ -14,7 +14,7 @@ class Store:
         self.inventory: Dict[int, Product] = {}  # product_id -> product
         self.offers: Offers = Offers()
 
-    def add_or_update_product(self, query):
+    def __add_or_update_product(self, query):
         product_id, product_name, quantity, price = query.split("|")
         self.inventory[int(product_id)] = Product(
             int(product_id), product_name, int(quantity), int(price))
@@ -28,13 +28,17 @@ class Store:
         print(requested_product)
         return requested_product.quantity
 
-    def make_sale(self, query):
+    def __make_sale(self, query):
         bill_entries = self.__get_bill_entries(query)
         self.__reduce_stock(bill_entries)
         order = Order(bill_entries)
         order = self.offers.apply_all_available_offers(order)
         print(order)
         return order.total
+
+    def __add_offer(self, query):
+        self.offers.handle_adding_offer(query)
+        print("Offer Added")
 
     def __reduce_stock(self, bill_entries: List[BillEntry]):
         for e in bill_entries:
@@ -59,24 +63,25 @@ class Store:
                 product_id, product.name, quantity, product.price, "N/A", price))
         return bill_entries
 
+    def execute_command(self, command):
+        command_name, query = command.split("=>")
+
+        match command_name:
+            case "INVENTORY": self.__add_or_update_product(query)
+
+            case "SALE": return self.__make_sale(query)
+
+            case "STOCK": return self.get_stock(query)
+
+            case "NEW-OFFER": self.__add_offer(query)
+
     def start_the_day(self):
         self.__display_greetings()
         store_is_open = True
         while store_is_open:
             try:
                 command = input("\nEnter your command here: ")
-                command_name, query = command.split("=>")
-
-                match command_name:
-                    case "EXIT": store_is_open = False
-
-                    case "INVENTORY": self.add_or_update_product(query)
-
-                    case "SALE": self.make_sale(query)
-
-                    case "STOCK": self.get_stock(query)
-
-                    case "NEW-OFFER": self.offers.handle_adding_offer(query)
+                self.execute_command(command)
 
             except KeyboardInterrupt:
                 store_is_open = False

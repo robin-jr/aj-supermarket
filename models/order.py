@@ -14,7 +14,7 @@ class Order:
             total += e.net_price
         total -= self.special_discount
         self.total = total
-    
+
     def set_total(self, total):
         self.total = total
 
