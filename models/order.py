@@ -6,6 +6,7 @@ class Order:
     def __init__(self, bill_entries: List[BillEntry]):
         self.bill_entries = bill_entries
         self.special_discount = 0
+        self.combo_discount=0
         self.total = 0
 
     def calculate_total(self):
@@ -25,6 +26,7 @@ class Order:
                   bill_entry.quantity, bill_entry.product_price, bill_entry.offer_id, bill_entry.net_price))
 
         print("Special discount: {}".format(self.special_discount))
+        print("Combo discount: {}".format(self.combo_discount))
         print("== Total ==")
         print(self.total)
         print("============")

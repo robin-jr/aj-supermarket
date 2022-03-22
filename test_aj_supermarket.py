@@ -37,3 +37,13 @@ class TestAjSupermarket(unittest.TestCase):
         store.execute_command("NEW-OFFER=>GreaterThan10Special|1|10|40|2")
         order_total = store.execute_command("SALE=>1|4;2|1")
         self.assertAlmostEqual(order_total, 20)
+
+    def test_combo_offer(self):
+        store = Store("Rajesh", "AJ Supermarket")
+        store.execute_command("INVENTORY=>1|GoodDay250g|20|10")
+        store.execute_command("INVENTORY=>2|GoodDay500g|10|20")
+        store.execute_command("NEW-OFFER=>Buy2Together|1|1,2|40|3")
+        # actual price = 40+20=60
+        # after offer = 60-40=20
+        order_total = store.execute_command("SALE=>1|4;2|1")
+        self.assertAlmostEqual(order_total, 20)

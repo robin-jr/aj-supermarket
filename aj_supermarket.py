@@ -83,6 +83,7 @@ class Store:
                 command = input("\nEnter your command here: ")
                 self.execute_command(command)
 
+            # when ctrl+c is pressed
             except KeyboardInterrupt:
                 store_is_open = False
             except Exception as e:
