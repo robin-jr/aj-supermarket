@@ -10,6 +10,11 @@ class TestAjSupermarket(unittest.TestCase):
         store.execute_command("INVENTORY=>2|GoodDay500g|10|20")
         self.assertAlmostEqual(store.get_stock(2), 10)
 
+    def test_stock(self):
+        store = Store("Rajesh", "AJ Supermarket")
+        store.execute_command("INVENTORY=>1|GoodDay250g|20|10")
+        self.assertAlmostEqual(store.execute_command("STOCK=>1"), 20)
+
     def test_sale(self):
         store = Store("Rajesh", "AJ Supermarket")
         store.execute_command("INVENTORY=>1|GoodDay250g|20|10")
