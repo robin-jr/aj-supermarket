@@ -14,6 +14,7 @@ class BillTotalOfferDispatcher(OfferDispatcher):
                 special_discount=e.discount
         return special_discount
 
-    def applyOffers(self, order : Order):
+    def apply_offers(self, order : Order):
         order.special_discount = self.__get_special_discount(order.total)
-        return order.special_discount
+        order.calculate_total()
+        return order

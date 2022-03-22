@@ -1,11 +1,8 @@
 from typing import Dict, List
 from classes.bill_entry import BillEntry
-from classes.bill_total_offer_dispatcher import BillTotalOfferDispatcher
+from classes.offers import Offers
 from classes.order import Order
 from classes.product import Product
-from classes.product_offer import ProductOffer
-from classes.product_offer_dispatcher import ProductOfferDispatcher
-from classes.bill_total_offer import BillTotalOffer
 
 class Store:
 
@@ -15,9 +12,7 @@ class Store:
 
         # A dictionay is used rather than a list to make lookups easier
         self.inventory: Dict[int, Product] = {}  # product_id -> product
-        
-        self.product_offer_dispatcher:ProductOfferDispatcher=ProductOfferDispatcher()
-        self.bill_total_offer_dispatcher:BillTotalOfferDispatcher=BillTotalOfferDispatcher()
+        self.offers:Offers=Offers()
 
     def add_or_update_product(self, query):
         product_id, product_name, quantity, price = query.split("|")
@@ -25,33 +20,20 @@ class Store:
             int(product_id), product_name, int(quantity), int(price))
         print("Inventory updated")
 
-    def add_offer(self, query):
-        offer_name = query.split("|")[0]
-        offer_id, product_id, min_quantity, discount_percent = map(
-            int, query.split("|")[1:])
-        new_offer=ProductOffer(offer_id,offer_name,product_id,min_quantity,discount_percent)
-        self.product_offer_dispatcher.add_offer(new_offer)
-        print("Offer Added")
-
-    def add_special_offer(self, query):
-        offer_id, offer_name, min_total, discount = query.split("|")
-        new_offer=BillTotalOffer(int(offer_id), offer_name, int(min_total), int(discount))
-        self.bill_total_offer_dispatcher.add_offer(new_offer)
-        print("Special Offer Added")
-
     def get_stock(self, query):
         product_id = int(query)
         requested_product = self.inventory.get(product_id, None)
         if not requested_product:
             raise Exception("The requested product is not found.")
-        print("{} - {}".format(requested_product.name, requested_product.quantity))
+        print(requested_product)
         return requested_product.quantity
 
     def make_sale(self, query):
         bill_entries = self.__get_bill_entries(query)
         self.__reduce_stock(bill_entries)
-        new_order = Order(bill_entries, self.product_offer_dispatcher,self.bill_total_offer_dispatcher)
-        new_order.execute()
+        order = Order(bill_entries)
+        order = self.offers.apply_all_available_offers(order)
+        print(order)
 
     def __reduce_stock(self, bill_entries: List[BillEntry]):
         for e in bill_entries:
@@ -81,7 +63,7 @@ class Store:
         store_is_open = True
         while store_is_open:
             try:
-                command = input("Enter your command here: \n")
+                command = input("\nEnter your command here: ")
                 command_name, query = command.split("=>")
 
                 match command_name:
@@ -93,7 +75,7 @@ class Store:
 
                     case "STOCK": self.get_stock(query)
 
-                    case "NEW-OFFER": self.add_offer(query)
+                    case "NEW-OFFER": self.offers.handle_adding_offer(query)
 
                     case "SPECIAL-OFFER": self.add_special_offer(query)
 

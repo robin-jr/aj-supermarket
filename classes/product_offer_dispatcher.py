@@ -26,9 +26,11 @@ class ProductOfferDispatcher(OfferDispatcher):
             bill_entry.net_price -= (bill_entry.net_price* (offer.discount_percent/100))
         return bill_entry
         
-    def applyOffers(self, order: Order):
+    def apply_offers(self, order: Order):
         bill_entries = order.bill_entries
         t=[]
         for e in bill_entries:
             t.append(self.__apply_best_offer_for_a_bill_entry(e))
         order.bill_entries=t
+        order.calculate_total()
+        return order

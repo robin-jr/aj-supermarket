@@ -10,5 +10,5 @@ class OfferDispatcher:
     def add_offer(self, offer: Offer):
         self.offers.append(offer)
     
-    def applyOffers(self,order : Order):
+    def apply_offers(self,order : Order):
         raise NotImplementedError()

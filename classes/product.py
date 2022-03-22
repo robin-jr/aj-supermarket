@@ -4,3 +4,6 @@ class Product:
         self.name = name
         self.quantity = quantity
         self.price = price
+    
+    def __str__(self):
+        return "{} - {}".format(self.name, self.quantity)
