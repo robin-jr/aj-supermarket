@@ -1,6 +1,6 @@
 from typing import List
-from models.bill_total_offer import BillTotalOffer
-from models.offer_dispatcher import OfferDispatcher
+from models.offers_module.bill_total_offer import BillTotalOffer
+from models.offers_module.offer_dispatcher import OfferDispatcher
 from models.order import Order
 
 

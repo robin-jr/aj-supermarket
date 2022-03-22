@@ -1,8 +1,8 @@
 from typing import List
 from models.bill_entry import BillEntry
-from models.offer_dispatcher import OfferDispatcher
+from models.offers_module.offer_dispatcher import OfferDispatcher
 from models.order import Order
-from models.product_offer import ProductOffer
+from models.offers_module.product_offer import ProductOffer
 
 
 class ProductOfferDispatcher(OfferDispatcher):

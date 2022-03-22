@@ -1,6 +1,6 @@
 from typing import Dict, List
 from models.bill_entry import BillEntry
-from models.offers import Offers
+from models.offers_module.offers import Offers
 from models.order import Order
 from models.product import Product
 

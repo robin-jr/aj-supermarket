@@ -1,6 +1,6 @@
 from typing import List
 
-from models.offer import Offer
+from models.offers_module.offer import Offer
 from models.order import Order
 
 
