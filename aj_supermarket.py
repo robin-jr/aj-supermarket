@@ -1,18 +1,18 @@
 from typing import Dict, List
-from classes.bill_entry import BillEntry
-from classes.offers import Offers
-from classes.order import Order
-from classes.product import Product
+from models.bill_entry import BillEntry
+from models.offers import Offers
+from models.order import Order
+from models.product import Product
+
 
 class Store:
-
     def __init__(self, owner_name: str, shop_name: str):
         self.owner_name = owner_name
         self.shop_name = shop_name
 
         # A dictionay is used rather than a list to make lookups easier
         self.inventory: Dict[int, Product] = {}  # product_id -> product
-        self.offers:Offers=Offers()
+        self.offers: Offers = Offers()
 
     def add_or_update_product(self, query):
         product_id, product_name, quantity, price = query.split("|")
@@ -34,6 +34,7 @@ class Store:
         order = Order(bill_entries)
         order = self.offers.apply_all_available_offers(order)
         print(order)
+        return order.total
 
     def __reduce_stock(self, bill_entries: List[BillEntry]):
         for e in bill_entries:
@@ -77,12 +78,10 @@ class Store:
 
                     case "NEW-OFFER": self.offers.handle_adding_offer(query)
 
-                    case "SPECIAL-OFFER": self.add_special_offer(query)
-
             except KeyboardInterrupt:
                 store_is_open = False
             except Exception as e:
-                print(e)
+                print("Error: ", e)
 
         print("\nGood bye! {}".format(self.owner_name))
 

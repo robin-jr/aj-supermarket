@@ -1,7 +1,7 @@
 from typing import List
-from classes.bill_total_offer import BillTotalOffer
-from classes.offer_dispatcher import OfferDispatcher
-from classes.order import Order
+from models.bill_total_offer import BillTotalOffer
+from models.offer_dispatcher import OfferDispatcher
+from models.order import Order
 
 class BillTotalOfferDispatcher(OfferDispatcher):
     def __init__(self):

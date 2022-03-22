@@ -1,7 +1,7 @@
 from typing import List
 
-from classes.offer import Offer
-from classes.order import Order
+from models.offer import Offer
+from models.order import Order
 
 class OfferDispatcher:
     def __init__(self):

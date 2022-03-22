@@ -1,5 +1,5 @@
 from typing import List
-from classes.bill_entry import BillEntry
+from models.bill_entry import BillEntry
 
 
 class Order:

@@ -1,4 +1,4 @@
-from classes.offer import Offer
+from models.offer import Offer
 
 class ProductOffer(Offer):
     def __init__(self,id,name,product_id,min_quantity, discount_percent):

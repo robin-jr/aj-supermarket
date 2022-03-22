@@ -1,8 +1,8 @@
-from classes.bill_total_offer import BillTotalOffer
-from classes.order import Order
-from classes.product_offer import ProductOffer
-from classes.product_offer_dispatcher import ProductOfferDispatcher
-from classes.bill_total_offer_dispatcher import BillTotalOfferDispatcher
+from models.bill_total_offer import BillTotalOffer
+from models.order import Order
+from models.product_offer import ProductOffer
+from models.product_offer_dispatcher import ProductOfferDispatcher
+from models.bill_total_offer_dispatcher import BillTotalOfferDispatcher
 
 
 class Offers:

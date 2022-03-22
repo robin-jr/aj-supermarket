@@ -1,4 +1,4 @@
-from classes.offer import Offer
+from models.offer import Offer
 
 class BillTotalOffer(Offer):
     def __init__(self, id, name,min_total, discount):
